@@ -6,6 +6,12 @@ import logging
 
 class Benchmark:
     def __init__(self):
+        """
+        Initialize the Benchmark instance.
+
+        The instance will store the results of scalability tests
+        in the `scalability_results` dictionary.
+        """
         self.scalability_results = {}
 
     def run(self, solver_name, solver_instance):
