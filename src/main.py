@@ -26,11 +26,13 @@ logging.basicConfig(
 
 if __name__ == "__main__":
     # Simulation parameters
-    time_span = 10  # Total time in multiples of tau
-    samples_per_tau = 100  # Number of samples per tau
+    time_span = 10  # Total time in multiples of decay time which is 1/decay_rate
+    samples_per_decay_time = 100  # Number of samples per decay time
     max_atoms = 6  # Maximum number of atoms for scalability tests
-    coupling = 1.0  # Coupling strength
     decay_rate = 2 * np.pi * 5.22e6  # Decay rate for Cs-133 D2 transition (rad/s)
+    coupling = (
+        decay_rate * 2
+    )  # Coupling strength (rad/s), coupling > decay_rate means the atoms can be entangled.
 
     if max_atoms < 2:
         raise ValueError("max_atoms must be at least 2.")
@@ -44,7 +46,9 @@ if __name__ == "__main__":
     ]
 
     # Initialize Benchmark instance
-    benchmark = Benchmark(max_atoms, time_span, samples_per_tau, coupling, decay_rate)
+    benchmark = Benchmark(
+        max_atoms, time_span, samples_per_decay_time, coupling, decay_rate
+    )
 
     # Run scalability tests for each solver
     for solver_class in solvers:

@@ -157,8 +157,8 @@ class Benchmark:
         )
 
         plt.suptitle(
-            f"Benchmark | Decay rate {self.decay_rate:.4f} | Coupling {self.coupling:.4f}",
-            fontsize=14,
+            f"Benchmark solvers for decay rate {self.decay_rate:.2e} rad.s^-1 and coupling {self.coupling:.2e} rad.s^-1",
+            fontsize=12,
             y=0.97,
         )
 

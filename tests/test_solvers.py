@@ -18,7 +18,7 @@ def solver_params():
     The default parameters are:
 
     * time_span: 10
-    * samples_per_tau: 100
+    * samples_per_decay_time: 100
     * n_atoms: 2
     * coupling: 1.0
     * decay_rate: 2 * 3.1415 * 5.22e6
@@ -39,7 +39,7 @@ def solver_params():
     """
     return {
         "time_span": 10,
-        "samples_per_tau": 100,
+        "samples_per_decay_time": 100,
         "n_atoms": 2,
         "coupling": 1.0,
         "decay_rate": 2 * 3.1415 * 5.22e6,
