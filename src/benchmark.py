@@ -5,20 +5,22 @@ import logging
 
 
 class Benchmark:
-    def __init__(self, max_atoms, time_span, samples_per_tau, coupling, decay_rate):
+    def __init__(
+        self, max_atoms, time_span, samples_per_decay_time, coupling, decay_rate
+    ):
         """
         Initialize a Benchmark instance.
 
         Parameters:
             max_atoms (int): The maximum number of atoms in the system.
             time_span (float): The total time for the simulation as number of decay times.
-            samples_per_tau (int): The number of samples per decay time.
+            samples_per_decay_time (int): The number of samples per decay time.
             coupling (float): The coupling strength between the atoms.
             decay_rate (float): The spontaneous emission rate.
         """
         self.max_atoms = max_atoms
         self.time_span = time_span
-        self.samples_per_tau = samples_per_tau
+        self.samples_per_decay_time = samples_per_decay_time
         self.coupling = coupling
         self.decay_rate = decay_rate
         self.scalability_results = {}
@@ -73,7 +75,7 @@ class Benchmark:
             logging.info(f"Testing {solver_class.__name__} with {num_atoms} atoms.")
             solver_instance = solver_class(
                 self.time_span,
-                self.samples_per_tau,
+                self.samples_per_decay_time,
                 num_atoms,
                 self.coupling,
                 self.decay_rate,
