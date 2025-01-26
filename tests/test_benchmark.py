@@ -12,7 +12,6 @@ def test_benchmark():
     results dictionary contains the expected keys ("runtime" and "memory_usage").
 
     """
-    benchmark = Benchmark()
     time_span = 10  # Total time in multiples of tau
     samples_per_tau = 100  # Number of samples per tau
     n_atoms = 2  # number of atoms for the test
@@ -20,6 +19,8 @@ def test_benchmark():
     decay_rate = (
         2 * 3.1415 * 5.22e6
     )  # approx. decay rate for Cs-133 D2 transition (rad/s)
+
+    benchmark = Benchmark(n_atoms, time_span, samples_per_tau, coupling, decay_rate)
 
     solver = QuTiPLindbladSolver(
         time_span, samples_per_tau, n_atoms, coupling, decay_rate

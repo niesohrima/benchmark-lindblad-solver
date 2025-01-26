@@ -5,15 +5,22 @@ import logging
 
 
 class Benchmark:
-    def __init__(self):
+    def __init__(self, max_atoms, time_span, samples_per_tau, coupling, decay_rate):
         """
         Initialize a Benchmark instance.
 
-        This constructor sets up the initial state for the Benchmark object,
-        including initializing a dictionary to store scalability results
-        for different solvers.
+        Parameters:
+            max_atoms (int): The maximum number of atoms in the system.
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            coupling (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
         """
-
+        self.max_atoms = max_atoms
+        self.time_span = time_span
+        self.samples_per_tau = samples_per_tau
+        self.coupling = coupling
+        self.decay_rate = decay_rate
         self.scalability_results = {}
 
     def run(self, solver_name, solver_instance):
@@ -40,36 +47,22 @@ class Benchmark:
             "memory_usage": max(memory_profile),
         }
 
-    def test_scalability(
-        self,
-        solver_class,
-        max_atoms,
-        time_span,
-        samples_per_tau,
-        coupling_strength,
-        decay_rate,
-    ):
-
+    def test_scalability(self, solver_class):
         """
-        Test the scalability of a solver class by measuring runtime and memory usage
-        for varying numbers of atoms.
+        Measure the scalability of a solver.
 
-        This method iterates over a range of atom counts, creates an instance of the
-        solver class for each count, and records the performance metrics. The results
-        are stored in the `scalability_results` dictionary with the solver class name
-        as the key.
+        The method tests the solver's performance by executing it with an increasing
+        number of atoms in the system. The results are stored in the `scalability_results`
+        dictionary.
 
         Parameters:
-            solver_class (type): The solver class to be tested.
-            max_atoms (int): The maximum number of atoms to test.
-            time_span (float): The total time for the simulation as number of decay times.
-            samples_per_tau (int): The number of samples per decay time.
-            coupling_strength (float): The coupling strength between the atoms.
-            decay_rate (float): The spontaneous emission rate.
-        """
+            solver_class: The solver class to test.
 
+        Returns:
+            None
+        """
         logging.info(f"Testing scalability for {solver_class.__name__}.")
-        atom_counts = range(2, max_atoms + 1)
+        atom_counts = range(2, self.max_atoms + 1)
         scalability_metrics = {
             "runtime": [],
             "memory_usage": [],
@@ -79,11 +72,11 @@ class Benchmark:
         for num_atoms in atom_counts:
             logging.info(f"Testing {solver_class.__name__} with {num_atoms} atoms.")
             solver_instance = solver_class(
-                time_span,
-                samples_per_tau,
+                self.time_span,
+                self.samples_per_tau,
                 num_atoms,
-                coupling_strength,
-                decay_rate,
+                self.coupling,
+                self.decay_rate,
             )
             performance_metrics = self.run(
                 f"{solver_class.__name__} ({num_atoms} atoms)", solver_instance
@@ -95,30 +88,28 @@ class Benchmark:
 
         self.scalability_results[solver_class.__name__] = scalability_metrics
 
-    def display_results(
-        self, export_to_file=True, output_file="benchmark-lindblad-solver.png"
-    ):
+    def display_results(self, export_to_file=True, output_file=f"benchmark-plots.png"):
         """
-        Displays the scalability results in a plot.
+        Visualize and optionally export the scalability results.
 
-        The plot shows the runtime and memory usage for each solver as a function
-        of the number of atoms. The results are displayed as two subplots, one for
-        runtime and one for memory usage.
+        This method generates plots to visualize the runtime and memory usage of
+        different solvers as a function of the number of atoms. It creates a single
+        figure with two subplots: one for runtime and one for memory usage. Each
+        solver's performance is represented as a line plot with markers. The plots
+        include labels and titles for clarity, and a combined legend is displayed
+        below the plots. If specified, the plots can be exported to a file.
 
-        If `export_to_file` is True, the plot is saved to a file with the name
-        specified by `output_file`. The plot is saved in PNG format with a
-        resolution of 300 dpi.
+        Parameters:
+            export_to_file (bool): Whether to save the plots to a file. Defaults to True.
+            output_file (str): The filename for the exported plot image. Defaults to "benchmark-plots.png".
 
-        Parameters
-        ----------
-        export_to_file : bool, optional
-            If True, the plot is saved to a file. Defaults to True.
-        output_file : str, optional
-            The name of the file to which the plot is saved. Defaults to
-            "benchmark-lindblad-solver.png".
+        Returns:
+            None
         """
+
         plot_height = 7
         plot_width = 7 * 1.618  # golden ratio
+
         plt.figure(figsize=(plot_width, plot_height))
 
         # Runtime plot
@@ -165,7 +156,13 @@ class Benchmark:
             frameon=False,
         )
 
-        plt.tight_layout(rect=[0, 0.1, 1, 1])
+        plt.suptitle(
+            f"Benchmark | Decay rate {self.decay_rate:.4f} | Coupling {self.coupling:.4f}",
+            fontsize=14,
+            y=0.97,
+        )
+
+        plt.tight_layout(rect=[0, 0.07, 1, 0.95])
         if export_to_file:
             plt.savefig(output_file, dpi=300, bbox_inches="tight")
         plt.show()

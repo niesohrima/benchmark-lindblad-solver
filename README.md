@@ -16,7 +16,7 @@ This project benchmarks various solvers for the Lindblad master equation, which 
 
 ## Introduction
 
-The Lindblad master equation is a key mathematical model for describing the evolution of quantum systems interacting with their environment. This project provides an efficient benchmarking framework to compare different numerical solvers for the equation. While parallelism is required for modelling the evolution of large quantum systems, still choosing an optimal algorithm for scaling up for concurrent operation is necessary. This benchmark aims exactly at this problem. By benchmarking the algorithms, we can choose the more optimal approach for parallel implementation.
+The Lindblad master equation is a key mathematical model for describing the evolution of quantum systems interacting with their environment. This project provides an efficient benchmarking framework to compare different numerical solvers for the equation. While parallelism is required for modelling the evolution of large quantum systems, still choosing an optimal algorithm for scaling up for concurrent operation is necessary. This benchmark aims exactly at this problem. By benchmarking the algorithms, we can choose the more optimal approach for parallel implementation. Note the coupling and decay rate of the target system does impact the solvers' performance as well.
 
 ## Features
 - Pairwise interaction between the atoms has been considered in the model.
