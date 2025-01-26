@@ -7,15 +7,29 @@ import logging
 class Benchmark:
     def __init__(self):
         """
-        Initialize the Benchmark instance.
+        Initialize a Benchmark instance.
 
-        The instance will store the results of scalability tests
-        in the `scalability_results` dictionary.
+        This constructor sets up the initial state for the Benchmark object,
+        including initializing a dictionary to store scalability results
+        for different solvers.
         """
+
         self.scalability_results = {}
 
     def run(self, solver_name, solver_instance):
-        """Measure runtime and memory usage for a given solver."""
+        """
+        Measure the performance of a solver.
+
+        The method measures the runtime and memory usage of the specified solver
+        instance and returns the results in a dictionary.
+
+        Parameters:
+            solver_name (str): A string identifying the solver.
+            solver_instance: An instance of the solver class.
+
+        Returns:
+            dict: A dictionary containing the solver name, runtime, and memory usage.
+        """
         logging.info(f"Measuring performance for {solver_name}.")
         start_time = time.time()
         memory_profile = memory_usage((solver_instance.solve, (), {}))
@@ -27,9 +41,33 @@ class Benchmark:
         }
 
     def test_scalability(
-        self, solver_class, max_atoms, time_points, coupling_strength, decay_rate
+        self,
+        solver_class,
+        max_atoms,
+        time_span,
+        samples_per_tau,
+        coupling_strength,
+        decay_rate,
     ):
-        """Run scalability tests for a solver across varying atom configurations."""
+
+        """
+        Test the scalability of a solver class by measuring runtime and memory usage
+        for varying numbers of atoms.
+
+        This method iterates over a range of atom counts, creates an instance of the
+        solver class for each count, and records the performance metrics. The results
+        are stored in the `scalability_results` dictionary with the solver class name
+        as the key.
+
+        Parameters:
+            solver_class (type): The solver class to be tested.
+            max_atoms (int): The maximum number of atoms to test.
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            coupling_strength (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
+        """
+
         logging.info(f"Testing scalability for {solver_class.__name__}.")
         atom_counts = range(2, max_atoms + 1)
         scalability_metrics = {
@@ -41,7 +79,11 @@ class Benchmark:
         for num_atoms in atom_counts:
             logging.info(f"Testing {solver_class.__name__} with {num_atoms} atoms.")
             solver_instance = solver_class(
-                time_points, num_atoms, coupling_strength, decay_rate
+                time_span,
+                samples_per_tau,
+                num_atoms,
+                coupling_strength,
+                decay_rate,
             )
             performance_metrics = self.run(
                 f"{solver_class.__name__} ({num_atoms} atoms)", solver_instance
@@ -56,7 +98,25 @@ class Benchmark:
     def display_results(
         self, export_to_file=True, output_file="benchmark-lindblad-solver.png"
     ):
-        """Plot aggregated scalability results for all solvers."""
+        """
+        Displays the scalability results in a plot.
+
+        The plot shows the runtime and memory usage for each solver as a function
+        of the number of atoms. The results are displayed as two subplots, one for
+        runtime and one for memory usage.
+
+        If `export_to_file` is True, the plot is saved to a file with the name
+        specified by `output_file`. The plot is saved in PNG format with a
+        resolution of 300 dpi.
+
+        Parameters
+        ----------
+        export_to_file : bool, optional
+            If True, the plot is saved to a file. Defaults to True.
+        output_file : str, optional
+            The name of the file to which the plot is saved. Defaults to
+            "benchmark-lindblad-solver.png".
+        """
         plot_height = 7
         plot_width = 7 * 1.618  # golden ratio
         plt.figure(figsize=(plot_width, plot_height))

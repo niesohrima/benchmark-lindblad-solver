@@ -6,36 +6,32 @@ import logging
 
 # Base Solver Class
 class LindbladSolver:
-    """
-    Base class for Lindblad equation solvers.
-
-    The Lindblad equation describes the dynamics of an open quantum system:
-        d\rho/dt = -i[H, \rho] + \sum_j (C_j \rho C_j^\dagger - 1/2 {C_j^\dagger C_j, \rho})
-    where:
-        - H: Hamiltonian representing coherent evolution.
-        - C_j: Collapse operators representing dissipative processes (e.g., spontaneous emission).
-        - \rho: Density matrix of the system.
-    Reference:
-        - G. Lindblad, "On the Generators of Quantum Dynamical Semigroups," Commun. Math. Phys. 48, 119–130 (1976).
-    """
-
-    def __init__(self, t_list, n_atoms):
+    def __init__(self, time_span, samples_per_tau, n_atoms, decay_rate):
         """
         Initialize the Lindblad solver.
 
-        Args:
-            t_list (list): Time points for solving the equation.
-            n_atoms (int): Number of atoms in the system.
+        Parameters:
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            n_atoms (int): The number of atoms in the system.
+            decay_rate (float): The spontaneous emission rate.
         """
-        self.t_list = t_list
+        self.time_span = time_span
+        self.samples_per_tau = samples_per_tau
         self.n_atoms = n_atoms
+        self.decay_rate = decay_rate
+        self.tau = 1 / decay_rate  # Decay time
+        self.t_list = self._generate_t_list()
+
+    def _generate_t_list(self):
+        """
+        Generates the time list based on the decay time and user-provided parameters.
+        """
+        total_time = self.time_span * self.tau
+        num_samples = int(self.samples_per_tau * self.time_span)
+        return np.linspace(0, total_time, num_samples)
 
     def solve(self):
-        """
-        Abstract method to solve the Lindblad equation.
-
-        Must be implemented by subclasses.
-        """
         raise NotImplementedError("Subclasses must implement the solve method.")
 
 
@@ -48,19 +44,19 @@ class QuTiPLindbladSolver(LindbladSolver):
     and solve the master equation. QuTiP is optimized for quantum systems.
     """
 
-    def __init__(self, t_list, n_atoms, coupling, decay_rate):
+    def __init__(self, time_span, samples_per_tau, n_atoms, coupling, decay_rate):
         """
-        Initialize the QuTiP-based Lindblad solver.
+        Initialize the QuTiP Lindblad solver.
 
-        Args:
-            t_list (list): Time points for solving the equation.
-            n_atoms (int): Number of atoms in the system.
-            coupling (float): Coupling strength between atoms.
-            decay_rate (float): Spontaneous emission rate.
+        Parameters:
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            n_atoms (int): The number of atoms in the system.
+            coupling (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
         """
-        super().__init__(t_list, n_atoms)
+        super().__init__(time_span, samples_per_tau, n_atoms, decay_rate)
         self.coupling = coupling
-        self.decay_rate = decay_rate
 
     def _define_hamiltonian(self):
         """
@@ -161,19 +157,19 @@ class SciPyLindbladSolver(LindbladSolver):
     This solver uses explicit integration of the Lindblad master equation.
     """
 
-    def __init__(self, t_list, n_atoms, coupling, decay_rate):
+    def __init__(self, time_span, samples_per_tau, n_atoms, coupling, decay_rate):
         """
-        Initialize the SciPy-based Lindblad solver.
+        Initialize the SciPy Lindblad solver.
 
-        Args:
-            t_list (list): Time points for solving the equation.
-            n_atoms (int): Number of atoms in the system.
-            coupling (float): Coupling strength between atoms.
-            decay_rate (float): Spontaneous emission rate.
+        Parameters:
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            n_atoms (int): The number of atoms in the system.
+            coupling (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
         """
-        super().__init__(t_list, n_atoms)
+        super().__init__(time_span, samples_per_tau, n_atoms, decay_rate)
         self.coupling = coupling
-        self.decay_rate = decay_rate
 
     def _define_hamiltonian(self):
         """
@@ -278,19 +274,20 @@ class RungeKuttaLindbladSolver(LindbladSolver):
     the Lindblad master equation.
     """
 
-    def __init__(self, t_list, n_atoms, coupling, decay_rate):
+    def __init__(self, time_span, samples_per_tau, n_atoms, coupling, decay_rate):
         """
-        Initialize the Runge-Kutta-based Lindblad solver.
+        Initialize the Runge-Kutta Lindblad solver.
 
-        Args:
-            t_list (list): Time points for solving the equation.
-            n_atoms (int): Number of atoms in the system.
-            coupling (float): Coupling strength between atoms.
-            decay_rate (float): Spontaneous emission rate.
+        Parameters:
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            n_atoms (int): The number of atoms in the system.
+            coupling (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
         """
-        super().__init__(t_list, n_atoms)
+
+        super().__init__(time_span, samples_per_tau, n_atoms, decay_rate)
         self.coupling = coupling
-        self.decay_rate = decay_rate
 
     def _define_hamiltonian(self):
         """
@@ -376,19 +373,19 @@ class BackwardEulerLindbladSolver(LindbladSolver):
     suitable for stiff systems.
     """
 
-    def __init__(self, t_list, n_atoms, coupling, decay_rate):
+    def __init__(self, time_span, samples_per_tau, n_atoms, coupling, decay_rate):
         """
-        Initialize the Backward Euler-based Lindblad solver.
+        Initialize the Backward Euler Lindblad solver.
 
-        Args:
-            t_list (list): Time points for solving the equation.
-            n_atoms (int): Number of atoms in the system.
-            coupling (float): Coupling strength between atoms.
-            decay_rate (float): Spontaneous emission rate.
+        Parameters:
+            time_span (float): The total time for the simulation as number of decay times.
+            samples_per_tau (int): The number of samples per decay time.
+            n_atoms (int): The number of atoms in the system.
+            coupling (float): The coupling strength between the atoms.
+            decay_rate (float): The spontaneous emission rate.
         """
-        super().__init__(t_list, n_atoms)
+        super().__init__(time_span, samples_per_tau, n_atoms, decay_rate)
         self.coupling = coupling
-        self.decay_rate = decay_rate
 
     def _define_hamiltonian(self):
         """

@@ -10,22 +10,39 @@ from src.solvers import (
 @pytest.fixture
 def solver_params():
     """
-    Fixture for providing parameters for the Lindblad solvers.
+    Fixture providing default parameters for solver tests.
 
-    The parameters are:
-        - t_list: A list of time points for solving the equation.
-        - n_atoms: The number of atoms in the system.
-        - coupling: The coupling strength between the atoms.
-        - decay_rate: The spontaneous emission rate.
+    The fixture returns a dictionary containing the default parameters for the
+    solvers. The parameters are used in the tests to create a solver instance.
 
-    Returns:
-        A dictionary with the above parameters.
+    The default parameters are:
+
+    * time_span: 10
+    * samples_per_tau: 100
+    * n_atoms: 2
+    * coupling: 1.0
+    * decay_rate: 2 * 3.1415 * 5.22e6
+
+    The fixture is used in the tests to create a solver instance with the default
+    parameters. The fixture is invoked by adding the parameter name to the test
+    function.
+
+    Example:
+
+    def test_solver(solver_params):
+        solver = Solver(**solver_params)
+        result = solver.solve()
+        assert result is not None, "Solver failed to produce a result."
+
+    In this example, the test function `test_solver` is invoked with the parameter
+    `solver_params`, which is the dictionary returned by this fixture.
     """
     return {
-        "t_list": [0, 1, 2],
+        "time_span": 10,
+        "samples_per_tau": 100,
         "n_atoms": 2,
         "coupling": 1.0,
-        "decay_rate": 0.1,
+        "decay_rate": 2 * 3.1415 * 5.22e6,
     }
 
 

@@ -13,8 +13,17 @@ def test_benchmark():
 
     """
     benchmark = Benchmark()
-    t_list = [0, 1, 2]
-    solver = QuTiPLindbladSolver(t_list, 2, 1.0, 0.1)
+    time_span = 10  # Total time in multiples of tau
+    samples_per_tau = 100  # Number of samples per tau
+    n_atoms = 2  # number of atoms for the test
+    coupling = 1.0  # Coupling strength
+    decay_rate = (
+        2 * 3.1415 * 5.22e6
+    )  # approx. decay rate for Cs-133 D2 transition (rad/s)
+
+    solver = QuTiPLindbladSolver(
+        time_span, samples_per_tau, n_atoms, coupling, decay_rate
+    )
     results = benchmark.run("Test Solver", solver)
     assert "runtime" in results, "Benchmark did not return runtime."
     assert "memory_usage" in results, "Benchmark did not return memory usage."

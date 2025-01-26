@@ -21,10 +21,12 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    t_list = np.linspace(0, 10, 100)  # Time points
+    # Simulation parameters
+    time_span = 10  # Total time in multiples of tau
+    samples_per_tau = 100  # Number of samples per tau
     max_atoms = 7  # Maximum number of atoms for scalability tests
     coupling = 1.0  # Coupling strength
-    decay_rate = 0.1  # Spontaneous decay rate
+    decay_rate = 2 * np.pi * 5.22e6  # Decay rate for Cs-133 D2 transition (rad/s)
 
     # List of solver classes to benchmark
     solvers = [
@@ -40,7 +42,7 @@ if __name__ == "__main__":
     # Run scalability tests for each solver
     for solver_class in solvers:
         benchmark.test_scalability(
-            solver_class, max_atoms, t_list, coupling, decay_rate
+            solver_class, max_atoms, time_span, samples_per_tau, coupling, decay_rate
         )
 
     # Display the scalability results
