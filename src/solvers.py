@@ -42,15 +42,14 @@ class LindbladSolver:
             self.coupling = self.coupling / self.decay_rate
             self.decay_rate = 1
         else:
-            self.coupling = 1 # in the absence of decay, set coupling to 1
+            self.coupling = 1  # in the absence of decay, set coupling to 1
 
     def _generate_t_list(self):
         """
         Generates the time list based on the decay time and user-provided parameters.
         """
-        total_time = self.time_span
         num_samples = int(self.samples_per_decay_time * self.time_span)
-        return np.linspace(0, total_time, num_samples)
+        return np.linspace(0, self.time_span, num_samples)
 
     def solve(self):
         raise NotImplementedError("Subclasses must implement the solve method.")
@@ -76,7 +75,7 @@ class QuTiPLindbladSolver(LindbladSolver):
             samples_per_decay_time (int): The number of samples per decay time.
             n_atoms (int): The number of atoms in the system.
             coupling (float): The coupling strength between the atoms.
-            decay_rate (float): The spontaneous emission rate.
+            decay_rate (float): For example, the spontaneous emission rate.
         """
         super().__init__(
             time_span, samples_per_decay_time, n_atoms, decay_rate, coupling
@@ -177,8 +176,9 @@ class QuTiPLindbladSolver(LindbladSolver):
 class SciPyLindbladSolver(LindbladSolver):
     """
     Lindblad equation solver using SciPy's ODE integration tools.
-
-    This solver uses explicit integration of the Lindblad master equation.
+    This solver uses explicit integration of the Lindblad master equation using the Runge-Kutta method of order 5(4).
+    The other implemented methods have been manually tested and seem to be too slow and
+    unstable for this type of equation and not very useful for this benchmark.
     """
 
     def __init__(
@@ -270,7 +270,7 @@ class SciPyLindbladSolver(LindbladSolver):
 
     def solve(self):
         """
-        Solve the Lindblad master equation using SciPy.
+        Solve the Lindblad master equation using SciPy solve_ivp.
 
         Returns:
             OdeResult: SciPy result object containing the solution.
@@ -289,6 +289,7 @@ class SciPyLindbladSolver(LindbladSolver):
             rho0_vec,
             t_eval=self.t_list,
             args=(H, L_ops),
+            method="RK45",
         )
 
 
