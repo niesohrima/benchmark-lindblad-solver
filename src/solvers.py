@@ -41,6 +41,8 @@ class LindbladSolver:
         if self.decay_rate != 0:
             self.coupling = self.coupling / self.decay_rate
             self.decay_rate = 1
+        else:
+            self.coupling = 1 # in the absence of decay, set coupling to 1
 
     def _generate_t_list(self):
         """
