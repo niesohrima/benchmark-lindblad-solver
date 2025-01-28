@@ -41,12 +41,12 @@ class Benchmark:
         """
         logging.info(f"Measuring performance for {solver_name}.")
         start_time = time.time()
-        memory_profile = memory_usage((solver_instance.solve, (), {}))
+        memory_profile = memory_usage((solver_instance.solve, (), {}), max_usage=True)
         end_time = time.time()
 
         return {
             "runtime": end_time - start_time,
-            "memory_usage": max(memory_profile),
+            "memory_usage": memory_profile,
         }
 
     def test_scalability(self, solver_class):
