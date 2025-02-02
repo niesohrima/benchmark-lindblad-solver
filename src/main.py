@@ -7,6 +7,7 @@ from solvers import (
     SciPyLindbladSolver,
     RungeKuttaLindbladSolver,
     BackwardEulerLindbladSolver,
+    SparseLindbladSolver,
 )
 
 # Generate a timestamp
@@ -43,6 +44,7 @@ if __name__ == "__main__":
         SciPyLindbladSolver,
         RungeKuttaLindbladSolver,
         BackwardEulerLindbladSolver,
+        SparseLindbladSolver,
     ]
 
     # Initialize Benchmark instance

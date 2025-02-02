@@ -1,6 +1,9 @@
 import numpy as np
 from qutip import *
 from scipy.integrate import solve_ivp
+from functools import reduce
+import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 import logging
 
 
@@ -82,7 +85,7 @@ class QuTiPLindbladSolver(LindbladSolver):
         )
 
     def _define_hamiltonian(self):
-        """
+        r"""
         Define the system's Hamiltonian.
 
         The Hamiltonian includes pairwise interactions between atoms, modeled as:
@@ -116,7 +119,7 @@ class QuTiPLindbladSolver(LindbladSolver):
         return H
 
     def _define_dissipators(self):
-        """
+        r"""
         Define the collapse operators (dissipators).
 
         Each atom undergoes spontaneous emission, represented by the operator:
@@ -199,7 +202,7 @@ class SciPyLindbladSolver(LindbladSolver):
         )
 
     def _define_hamiltonian(self):
-        """
+        r"""
         Define the system's Hamiltonian.
 
         The Hamiltonian includes pairwise interactions between atoms, modeled as:
@@ -222,7 +225,7 @@ class SciPyLindbladSolver(LindbladSolver):
         return H
 
     def _define_lindblad_operators(self):
-        """
+        r"""
         Define the collapse operators (Lindblad operators).
 
         Each atom undergoes spontaneous emission, represented by the operator:
@@ -489,3 +492,94 @@ class BackwardEulerLindbladSolver(LindbladSolver):
             result.append(rho)
 
         return np.array(result)
+
+
+# Sparse Matrix Solver
+class SparseLindbladSolver(LindbladSolver):
+    """
+    Lindblad equation solver using sparse matrix representation.
+
+    This solver leverages SciPy's sparse matrix tools for efficient computation.
+    """
+
+    def __init__(
+        self, time_span, samples_per_decay_time, n_atoms, coupling, decay_rate
+    ):
+        super().__init__(
+            time_span, samples_per_decay_time, n_atoms, decay_rate, coupling
+        )
+
+    def _define_hamiltonian(self):
+        """Define the system's Hamiltonian as a sparse matrix using SciPy and NumPy."""
+        logging.info(f"Defining sparse Hamiltonian for {self.n_atoms} atoms.")
+        size = 2**self.n_atoms
+        H = sp.csr_matrix((size, size), dtype=np.complex128)
+
+        sigmap = sp.csr_matrix([[0, 1], [0, 0]], dtype=np.complex128)
+        sigmam = sp.csr_matrix([[0, 0], [1, 0]], dtype=np.complex128)
+
+        for j in range(self.n_atoms):
+            for k in range(j + 1, self.n_atoms):
+                op_j = [sp.eye(2, dtype=np.complex128)] * self.n_atoms
+                op_k = op_j.copy()
+                op_j[j] = sigmap
+                op_k[k] = sigmam
+
+                kron_j = reduce(sp.kron, op_j)
+                kron_k = reduce(sp.kron, op_k)
+
+                H += self.coupling * (kron_j @ kron_k + kron_k @ kron_j)
+
+        return H
+
+    def _define_lindblad_operators(self):
+        """Define Lindblad (collapse) operators efficiently using SciPy."""
+        logging.info(f"Defining sparse Lindblad operators for {self.n_atoms} atoms.")
+        size = 2**self.n_atoms
+        L_ops = []
+
+        for j in range(self.n_atoms):
+            L = sp.lil_matrix((size, size), dtype=np.complex128)
+            for i in range(size // 2):
+                L[i, i + size // 2] = np.sqrt(self.decay_rate)
+            L_ops.append(L.tocsr())
+
+        return L_ops
+
+    def _construct_liouvillian(self, H, L_ops):
+        """Construct the Liouvillian superoperator in sparse form."""
+        size = H.shape[0]
+        I = sp.eye(size, format="csr", dtype=np.complex128)
+        H_super = sp.kron(I, H, format="csr") - sp.kron(H.T, I, format="csr")
+
+        dissipators = sp.csr_matrix((size**2, size**2), dtype=np.complex128)
+        for L in L_ops:
+            LdL = L.conj().T @ L
+            L_super = sp.kron(I, L, format="csr") @ sp.kron(L.conj().T, I, format="csr")
+            LdL_super = 0.5 * (
+                sp.kron(I, LdL, format="csr") + sp.kron(LdL.T, I, format="csr")
+            )
+            dissipators += L_super - LdL_super
+
+        return -1j * H_super + dissipators
+
+    def solve(self):
+        """Solve the Lindblad master equation using sparse matrix techniques."""
+        logging.info(
+            f"Solving Lindblad equation with Sparse solver for {self.n_atoms} atoms."
+        )
+        H = self._define_hamiltonian()
+        L_ops = self._define_lindblad_operators()
+        L_super = self._construct_liouvillian(H, L_ops)
+
+        size = 2**self.n_atoms
+        rho0 = sp.csr_matrix((size, size), dtype=np.complex128)
+        rho0[0, 0] = 1.0
+
+        rho0_vec = rho0.toarray().flatten(order="F")
+
+        rho_t_vec = spla.expm_multiply(L_super, rho0_vec)
+
+        rho_t = rho_t_vec.reshape((size, size), order="F")
+
+        return rho_t
