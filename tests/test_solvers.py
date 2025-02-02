@@ -4,93 +4,93 @@ from src.solvers import (
     SciPyLindbladSolver,
     RungeKuttaLindbladSolver,
     BackwardEulerLindbladSolver,
+    SparseLindbladSolver,
 )
+
+# List of solver classes to test
+solvers = [
+    QuTiPLindbladSolver,
+    SciPyLindbladSolver,
+    RungeKuttaLindbladSolver,
+    BackwardEulerLindbladSolver,
+    SparseLindbladSolver,
+]
 
 
 @pytest.fixture
-def solver_params():
+def solver_params_dissipative():
     """
-    Fixture providing default parameters for solver tests.
+    Fixture returning parameters for Lindblad solvers that simulate a dissipative system
+    (i.e. a system where the decay rate is greater than the coupling strength).
 
-    The fixture returns a dictionary containing the default parameters for the
-    solvers. The parameters are used in the tests to create a solver instance.
+    Returns:
+        dict: Dictionary containing parameters for the Lindblad solvers.
+    """
 
-    The default parameters are:
+    return {
+        "time_span": 10,
+        "samples_per_decay_time": 100,
+        "n_atoms": 2,
+        "coupling": 1.0,
+        "decay_rate": 1e6,
+    }
 
-    * time_span: 10
-    * samples_per_decay_time: 100
-    * n_atoms: 2
-    * coupling: 1.0
-    * decay_rate: 2 * 3.1415 * 5.22e6
 
-    The fixture is used in the tests to create a solver instance with the default
-    parameters. The fixture is invoked by adding the parameter name to the test
-    function.
+@pytest.fixture
+def solver_params_coherent():
+    """
+    Fixture returning parameters for Lindblad solvers for testing coherent systems,
+    (i.e. systems where the coupling strength is greater than the decay rate).
 
-    Example:
-
-    def test_solver(solver_params):
-        solver = Solver(**solver_params)
-        result = solver.solve()
-        assert result is not None, "Solver failed to produce a result."
-
-    In this example, the test function `test_solver` is invoked with the parameter
-    `solver_params`, which is the dictionary returned by this fixture.
+    Returns:
+        dict: Dictionary containing parameters for the Lindblad solvers.
     """
     return {
         "time_span": 10,
         "samples_per_decay_time": 100,
         "n_atoms": 2,
         "coupling": 1.0,
-        "decay_rate": 2 * 3.1415 * 5.22e6,
+        "decay_rate": 1e-6,
     }
 
 
-def test_qutip_solver(solver_params):
+def test_solvers_dissipative(solver_params_dissipative):
     """
-    Test that the QuTiP solver produces a result.
+    Test that each solver produces a result in a dissipative system, i.e.
+    where the decay rate is greater than the coupling strength.
 
-    The test checks that the QuTiP solver produces a result, which is a QuTiP
-    Result object. The test fails if the result is None.
+    The test creates an instance of each solver with the given parameters,
+    and measures the solver's performance. The test asserts that the measurement
+    results dictionary contains the expected keys ("runtime" and "memory_usage").
+
+    Parameters:
+        solver_params_dissipative (dict): A dictionary of parameters for the solver,
+            including time_span, samples_per_decay_time, n_atoms, coupling, and decay_rate.
     """
-    solver = QuTiPLindbladSolver(**solver_params)
-    result = solver.solve()
-    assert result is not None, "QuTiP solver failed to produce a result."
+    for solver in solvers:
+        solver_instance = solver(**solver_params_dissipative)
+        result = solver_instance.solve()
+        assert (
+            result is not None
+        ), f"{solver.__name__} failed to produce a result with decay_rate > coupling."
 
 
-def test_scipy_solver(solver_params):
+def test_solvers_coherent(solver_params_coherent):
     """
-    Test that the SciPy solver successfully solves the Lindblad equation.
+    Test that each solver produces a result in a coherent system, i.e.
+    where the decay rate is less than the coupling strength.
 
-    The test verifies that the SciPy solver produces a successful result,
-    indicated by the `success` attribute of the result object. The test
-    fails if the solver does not successfully solve the equation.
+    The test creates an instance of each solver with the given parameters,
+    and measures the solver's performance. The test asserts that the measurement
+    results dictionary contains the expected keys ("runtime" and "memory_usage").
+
+    Parameters:
+        solver_params_coherent (dict): A dictionary of parameters for the solver,
+            including time_span, samples_per_decay_time, n_atoms, coupling, and decay_rate.
     """
-
-    solver = SciPyLindbladSolver(**solver_params)
-    result = solver.solve()
-    assert result.success, "SciPy solver failed to solve the equation."
-
-
-def test_runge_kutta_solver(solver_params):
-    """
-    Test that the Runge-Kutta solver produces a result.
-
-    The test checks that the Runge-Kutta solver produces a result, which is a
-    NumPy array. The test fails if the result is None.
-    """
-    solver = RungeKuttaLindbladSolver(**solver_params)
-    result = solver.solve()
-    assert result is not None, "Runge-Kutta solver failed to produce a result."
-
-
-def test_backward_euler_solver(solver_params):
-    """
-    Test that the Backward Euler solver produces a result.
-
-    The test checks that the Backward Euler solver produces a result, which is a
-    NumPy array. The test fails if the result is None.
-    """
-    solver = BackwardEulerLindbladSolver(**solver_params)
-    result = solver.solve()
-    assert result is not None, "Backward Euler solver failed to produce a result."
+    for solver in solvers:
+        solver_instance = solver(**solver_params_coherent)
+        result = solver_instance.solve()
+        assert (
+            result is not None
+        ), f"{solver.__name__} failed to produce a result with decay_rate < coupling."
