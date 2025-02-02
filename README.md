@@ -26,6 +26,7 @@ The Lindblad master equation is a key mathematical model for describing the evol
   - SciPy-based solver
   - Runge-Kutta solver
   - Backward Euler solver
+  - Sparse Matrix-based solver
 - Scalability tests for systems with up to N atoms.
 - Visualization of runtime and memory usage.
 - Logging for detailed performance insights.
@@ -59,15 +60,16 @@ The following solvers are implemented in `solvers.py`:
 
 - **QuTiP Solver**: Uses QuTiP's `mesolve` function for solving the Lindblad equation.
 - **SciPy Solver**: Implements a custom solver based on `solve_ivp` from SciPy.
-- **Runge-Kutta Solver**: A manual implementation of the Runge-Kutta integration method.
+- **Runge-Kutta Solver**: A manual implementation of the Runge-Kutta integration method (4th degree).
 - **Backward Euler Solver**: A backward Euler method tailored for the Lindblad equation.
+- **Sparse Matrix Solver**: A solver using Scipy's sparse matrix modules.
 
 ## Benchmarking
 
 The `Benchmark` class in `benchmark.py`:
 
 - **Scalability Testing**: Evaluates solvers across varying the number of atoms in the system and measures runtime and memory usage.
-- **Visualization**: Generates comparative plots for runtime and memory usage, saved as `benchmark-lindblad-solver.png`.
+- **Visualization**: Generates comparative plots for runtime and memory usage, saved as `benchmark-plots-<timestamp>.png`.
 
 ### Example Results
 
